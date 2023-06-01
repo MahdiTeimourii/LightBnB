@@ -1,6 +1,3 @@
-
-//const properties = require("./json/properties.json");
-//const users = require("./json/users.json");
 const { Pool } = require('pg');
 const pool = new Pool({
   user: 'vagrant',
@@ -89,6 +86,7 @@ const getAllReservations = function (guest_id, limit = 10) {
       console.log(err.message);
     });
 };
+
 /// Properties
 
 /**
@@ -160,29 +158,8 @@ const getAllProperties = (options, limit = 10) => {
     });
 };
 
-
-// Add GROUP BY, ORDER BY, and LIMIT clauses
-queryString += `
-    GROUP BY properties.id
-    ORDER BY cost_per_night
-    LIMIT $${queryParams.length + 1};
-  `;
-
-queryParams.push(limit);
-
-return pool
-  .query(queryString, queryParams)
-  .then((result) => {
-    return result.rows;
-  })
-  .catch((err) => {
-    console.log(err.message);
-  });
-};
-
-
 /**
- * Add a property to the database
+ * Add a property to the database.
  * @param {{}} property An object containing all of the property details.
  * @return {Promise<{}>} A promise to the property.
  */
