@@ -110,4 +110,37 @@ const getAllProperties = (options, limit = 10) => {
 const addProperty = function (property) {
   return pool
     .query(
-      'INSERT INTO properties (title, description, owner_id, thumbnail_photo_url, cover_photo_url, cost_per_night, street, city, province, post_code, country, parking_spaces, number_of_bathrooms, number_of_bedrooms) VALUES ($1, $2,
+      'INSERT INTO properties (title, description, owner_id, thumbnail_photo_url, cover_photo_url, cost_per_night, street, city, province, post_code, country, parking_spaces, number_of_bathrooms, number_of_bedrooms) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *',
+      [
+        property.title,
+        property.description,
+        property.owner_id,
+        property.thumbnail_photo_url,
+        property.cover_photo_url,
+        property.cost_per_night,
+        property.street,
+        property.city,
+        property.province,
+        property.post_code,
+        property.country,
+        property.parking_spaces,
+        property.number_of_bathrooms,
+        property.number_of_bedrooms
+      ]
+    )
+    .then((result) => {
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
+};
+
+module.exports = {
+  getUserWithEmail,
+  getUserWithId,
+  addUser,
+  getAllReservations,
+  getAllProperties,
+  addProperty,
+};
