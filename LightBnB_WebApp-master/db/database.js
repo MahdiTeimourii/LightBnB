@@ -98,8 +98,60 @@ const getAllReservations = function (guest_id, limit = 10) {
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = (options, limit = 10) => {
+  const queryParams = [];
+  let queryString = `
+    SELECT properties.*, AVG(property_reviews.rating) AS average_rating
+    FROM properties
+    JOIN property_reviews ON properties.id = property_reviews.property_id
+  `;
+
+  // Add WHERE clause if city filter is provided
+  if (options.city) {
+    queryParams.push(`%${options.city}%`);
+    queryString += `WHERE city ILIKE $${queryParams.length} `;
+  }
+
+  // Add WHERE clause if owner_id filter is provided
+  if (options.owner_id) {
+    queryParams.push(options.owner_id);
+    if (queryParams.length === 1) {
+      queryString += `WHERE owner_id = $${queryParams.length} `;
+    } else {
+      queryString += `AND owner_id = $${queryParams.length} `;
+    }
+  }
+
+  // Add WHERE clause if minimum_price_per_night filter is provided
+  if (options.minimum_price_per_night) {
+    queryParams.push(options.minimum_price_per_night * 100); // convert dollars to cents
+    if (queryParams.length === 1) {
+      queryString += `WHERE cost_per_night >= $${queryParams.length} `;
+    } else {
+      queryString += `AND cost_per_night >= $${queryParams.length} `;
+    }
+  }
+
+  // Add WHERE clause if maximum_price_per_night filter is provided
+  if (options.maximum_price_per_night) {
+    queryParams.push(options.maximum_price_per_night * 100); // convert dollars to cents
+    if (queryParams.length === 1) {
+      queryString += `WHERE cost_per_night <= $${queryParams.length} `;
+    } else {
+      queryString += `AND cost_per_night <= $${queryParams.length} `;
+    }
+  }
+
+  // Add GROUP BY, ORDER BY, and LIMIT clauses
+  queryString += `
+    GROUP BY properties.id
+    ORDER BY cost_per_night
+    LIMIT $${queryParams.length + 1};
+  `;
+
+  queryParams.push(limit);
+
   return pool
-    .query(`SELECT * FROM properties LIMIT $1`, [limit])
+    .query(queryString, queryParams)
     .then((result) => {
       return result.rows;
     })
@@ -107,6 +159,27 @@ const getAllProperties = (options, limit = 10) => {
       console.log(err.message);
     });
 };
+
+
+// Add GROUP BY, ORDER BY, and LIMIT clauses
+queryString += `
+    GROUP BY properties.id
+    ORDER BY cost_per_night
+    LIMIT $${queryParams.length + 1};
+  `;
+
+queryParams.push(limit);
+
+return pool
+  .query(queryString, queryParams)
+  .then((result) => {
+    return result.rows;
+  })
+  .catch((err) => {
+    console.log(err.message);
+  });
+};
+
 
 /**
  * Add a property to the database
